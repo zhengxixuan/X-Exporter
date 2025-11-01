@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import QRCode from 'qrcode';
 import { saveAs } from 'file-saver';
-import html2canvas from 'html2canvas';
+import * as htmlToImage from 'html-to-image';
 import type { TweetData } from '../../common/types/tweet';
 import { ensurePortalRoot } from '../utils/dom';
 import { logger } from '../../common/utils/logger';
@@ -154,113 +154,66 @@ export function PosterModal({ tweet, onClose }: PosterModalProps) {
       // Wait a bit for any pending renders
       await new Promise(resolve => setTimeout(resolve, 200));
 
-      const POSTER_WIDTH = 366;
+      console.log('🖼️ 开始使用 html-to-image 生成海报...');
 
-      const canvas = await html2canvas(posterRef.current, {
-        backgroundColor: '#ffffff',
-        scale: 3,
-        useCORS: true,
-        allowTaint: true,
-        logging: false,
-        x: 0,
-        y: 0,
-        scrollX: 0,
-        scrollY: 0,
-        onclone: (clonedDoc) => {
-          const clonedElement = clonedDoc.querySelector('[data-x-exporter-poster-card]') as HTMLElement;
-          if (!clonedElement) return;
+      // 🔑 关键修复：预先将所有外部图片转换为 data URL
+      // 避免 html-to-image 在处理跨域图片时失败
+      const allImages = posterRef.current.querySelectorAll('img');
+      const imagePromises: Promise<void>[] = [];
 
-          // Force all critical styles with fixed values
-          clonedElement.style.width = `${POSTER_WIDTH}px`;
-          clonedElement.style.maxWidth = `${POSTER_WIDTH}px`;
-          clonedElement.style.minWidth = `${POSTER_WIDTH}px`;
-          clonedElement.style.height = 'auto';
-          clonedElement.style.margin = '0';
-          clonedElement.style.padding = '24px 20px';
-          clonedElement.style.boxSizing = 'border-box';
-          clonedElement.style.backgroundColor = '#ffffff';
-          clonedElement.style.borderRadius = '24px';
-          clonedElement.style.border = '1px solid rgba(15, 20, 25, 0.05)';
-          clonedElement.style.boxShadow = '0 20px 40px rgba(15, 20, 25, 0.18)';
-          clonedElement.style.backgroundImage = 'linear-gradient(180deg, rgba(249, 250, 252, 0.9) 0%, #ffffff 24%)';
-          clonedElement.style.fontFamily = 'Inter, Noto Sans SC, system-ui, sans-serif';
-          clonedElement.style.color = '#0f1419';
-          clonedElement.style.display = 'flex';
-          clonedElement.style.flexDirection = 'column';
-          clonedElement.style.gap = '20px';
-          clonedElement.style.position = 'relative';
-
-          // Apply styles to all child elements
-          const applyStyles = (original: HTMLElement, cloned: HTMLElement) => {
-            const originalStyle = window.getComputedStyle(original);
-
-            cloned.style.fontFamily = originalStyle.fontFamily;
-            cloned.style.fontSize = originalStyle.fontSize;
-            cloned.style.fontWeight = originalStyle.fontWeight;
-            cloned.style.lineHeight = originalStyle.lineHeight;
-            cloned.style.color = originalStyle.color;
-            cloned.style.backgroundColor = originalStyle.backgroundColor;
-            cloned.style.padding = originalStyle.padding;
-            cloned.style.margin = originalStyle.margin;
-            cloned.style.borderRadius = originalStyle.borderRadius;
-            cloned.style.border = originalStyle.border;
-            cloned.style.borderTop = originalStyle.borderTop;
-            cloned.style.borderRight = originalStyle.borderRight;
-            cloned.style.borderBottom = originalStyle.borderBottom;
-            cloned.style.borderLeft = originalStyle.borderLeft;
-            cloned.style.display = originalStyle.display;
-            cloned.style.flexDirection = originalStyle.flexDirection;
-            cloned.style.gap = originalStyle.gap;
-            cloned.style.alignItems = originalStyle.alignItems;
-            cloned.style.justifyContent = originalStyle.justifyContent;
-            cloned.style.whiteSpace = originalStyle.whiteSpace;
-            cloned.style.wordBreak = originalStyle.wordBreak;
-            cloned.style.overflowWrap = originalStyle.overflowWrap;
-            cloned.style.textAlign = originalStyle.textAlign;
-
-            // Copy size properties, but avoid viewport-relative units
-            const width = originalStyle.width;
-            const maxWidth = originalStyle.maxWidth;
-            const minWidth = originalStyle.minWidth;
-
-            if (width && !width.includes('vw') && !width.includes('vh')) {
-              cloned.style.width = width;
+      allImages.forEach((img) => {
+        if (img.src && !img.src.startsWith('data:')) {
+          const promise = (async () => {
+            try {
+              const dataUrl = await requestImageDataUrl(img.src);
+              img.src = dataUrl;
+              console.log('✅ 图片已转换为 data URL');
+            } catch (err) {
+              console.warn('⚠️ 图片转换失败，将跳过:', img.src, err);
+              // 失败时使用占位符或移除
+              img.style.display = 'none';
             }
-            if (maxWidth && !maxWidth.includes('vw') && !maxWidth.includes('vh')) {
-              cloned.style.maxWidth = maxWidth;
-            }
-            if (minWidth && !minWidth.includes('vw') && !minWidth.includes('vh')) {
-              cloned.style.minWidth = minWidth;
-            }
-
-            cloned.style.height = originalStyle.height;
-            cloned.style.maxHeight = originalStyle.maxHeight;
-            cloned.style.minHeight = originalStyle.minHeight;
-            cloned.style.objectFit = originalStyle.objectFit;
-            cloned.style.gridTemplateColumns = originalStyle.gridTemplateColumns;
-            cloned.style.gridColumn = originalStyle.gridColumn;
-          };
-
-          const originalElements = Array.from(posterRef.current!.querySelectorAll('*'));
-          const clonedElements = Array.from(clonedElement.querySelectorAll('*'));
-
-          originalElements.forEach((original, index) => {
-            const cloned = clonedElements[index];
-            if (original instanceof HTMLElement && cloned instanceof HTMLElement) {
-              applyStyles(original, cloned);
-            }
-          });
+          })();
+          imagePromises.push(promise);
         }
       });
 
-      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
-      if (!blob) {
-        throw new Error('生成图片失败');
-      }
+      // 等待所有图片转换完成
+      await Promise.all(imagePromises);
+      console.log(`✅ 已处理 ${imagePromises.length} 个图片`);
 
-      const filename = `${normalizedTimestamp}-${tweet.authorHandle || 'unknown'}-poster.png`;
-      saveAs(blob, filename);
-      setFeedback('已开始下载海报');
+      try {
+        // 🔑 新方案：直接导出已经有背景样式的父元素（来自 CSS）
+        const parent = posterRef.current.parentElement;
+        if (!parent) {
+          throw new Error('无法找到父元素');
+        }
+
+        console.log('🎨 准备导出，父元素实际宽度:', parent.offsetWidth, 'px');
+
+        // 使用 html-to-image 的 toPng 方法，直接导出父元素
+        const dataUrl = await htmlToImage.toPng(parent, {
+          quality: 1,
+          pixelRatio: 3,
+          cacheBust: true,
+        });
+
+        console.log('✅ 图片生成成功，data URL 长度:', dataUrl.length);
+
+        // 将 data URL 转换为 Blob
+        const response = await fetch(dataUrl);
+        const blob = await response.blob();
+
+        console.log('✅ Blob 创建成功，大小:', blob.size);
+
+        const filename = `${normalizedTimestamp}-${tweet.authorHandle || 'unknown'}-poster.png`;
+        saveAs(blob, filename);
+        setFeedback('已开始下载海报');
+        console.log('✅ 海报下载完成');
+      } catch (innerError) {
+        console.error('❌ html-to-image 生成失败:', innerError);
+        throw innerError;
+      }
     } catch (error) {
       logger.error('海报导出失败', error);
       setFeedback('导出失败,请重试');

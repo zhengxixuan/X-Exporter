@@ -215,6 +215,7 @@ article[data-testid="tweet"] {
 .x-exporter-modal__content {
   padding: 20px;
   overflow: auto;
+  text-align: center;
 }
 
 .x-exporter-modal__textarea {
@@ -270,8 +271,12 @@ article[data-testid="tweet"] {
 }
 
 .x-exporter-poster-preview {
-  display: flex;
+  display: inline-flex;
   justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  margin: 0 auto;
 }
 
 .x-exporter-poster {
@@ -479,6 +484,6 @@ article[data-testid="tweet"] {
 .x-exporter-poster__brand-meta {
   font-size: 11px;
   color: rgba(15, 20, 25, 0.55);
-  white-space: pre-wrap;
+  white-space: nowrap;
   text-align: right;
 }
