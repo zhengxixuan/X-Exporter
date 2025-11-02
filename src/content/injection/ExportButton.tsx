@@ -188,11 +188,18 @@ export function ExportButton({ tweetId, tweetElement }: ExportButtonProps) {
           aria-label="Export"
           onClick={() => setMenuOpen((open) => !open)}
         >
-          Export
+          <img
+            src={`chrome-extension://${chrome.runtime.id}/src/icons/icon-48.png`}
+            alt="Export"
+            className="x-exporter-action-icon"
+          />
         </button>
         {menuOpen ? (
           <div className="x-exporter-menu" ref={menuRef}>
             <p className="x-exporter-menu__title">Select export format</p>
+            <button type="button" onClick={handlePosterExport} className="x-exporter-menu__item">
+              Export Poster
+            </button>
             <button type="button" onClick={handleMarkdownExport} className="x-exporter-menu__item">
               Markdown · Single
             </button>
@@ -210,9 +217,6 @@ export function ExportButton({ tweetId, tweetElement }: ExportButtonProps) {
               }
             >
               Markdown · Thread
-            </button>
-            <button type="button" onClick={handlePosterExport} className="x-exporter-menu__item">
-              Export Poster
             </button>
             <button type="button" onClick={closeMenu} className="x-exporter-menu__cancel">
               Cancel

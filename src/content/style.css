@@ -50,8 +50,8 @@ article[data-testid="tweet"] {
 
 .x-exporter-floating-action {
   position: absolute;
-  top: 12px;
-  right: 56px;
+  top: 8px;
+  right: 72px;
   display: flex;
   align-items: center;
   z-index: 2147483000;
@@ -65,22 +65,36 @@ article[data-testid="tweet"] {
 .x-exporter-action-button {
   all: unset;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 9999px;
-  font-size: 12px;
-  line-height: 1;
-  background: rgba(29, 155, 240, 0.1);
-  color: rgb(29, 155, 240);
-  font-weight: 600;
+  padding: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  transition: background-color 0.2s ease;
+  box-sizing: border-box;
 }
 
 .x-exporter-action-button:hover {
-  background: rgba(29, 155, 240, 0.2);
+  background-color: rgba(102, 126, 234, 0.1);
+}
+
+.x-exporter-action-button:active {
+  background-color: rgba(102, 126, 234, 0.15);
 }
 
 .x-exporter-action-button:focus-visible {
-  outline: 2px solid rgba(29, 155, 240, 0.6);
+  outline: 2px solid rgba(102, 126, 234, 0.4);
   outline-offset: 2px;
+}
+
+.x-exporter-action-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 4px;
 }
 
 .x-exporter-menu {
@@ -88,46 +102,69 @@ article[data-testid="tweet"] {
   top: calc(100% + 8px);
   right: 0;
   z-index: 2147483647;
-  min-width: 200px;
-  padding: 16px;
-  background: linear-gradient(180deg, #1c1f28 0%, #161921 100%);
-  color: #f5f8fa;
-  border-radius: 12px;
-  box-shadow: 0 16px 32px rgba(8, 11, 21, 0.4);
+  min-width: 220px;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(102, 126, 234, 0.4), 0 2px 8px rgba(0, 0, 0, 0.1);
   display: grid;
-  gap: 10px;
+  gap: 8px;
   font-size: 13px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
 }
 
 .x-exporter-menu__title {
-  margin: 0;
+  margin: 0 0 8px 0;
   font-weight: 600;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.85);
+  font-size: 15px;
+  color: #ffffff;
+  letter-spacing: 0.01em;
 }
 
 .x-exporter-menu__item,
 .x-exporter-menu__cancel {
   all: unset;
   cursor: pointer;
-  padding: 8px 10px;
-  border-radius: 8px;
-  transition: background 0.15s ease;
+  padding: 10px 12px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.1);
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .x-exporter-menu__item:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.x-exporter-menu__item:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .x-exporter-menu__item:disabled {
   cursor: not-allowed;
-  opacity: 0.5;
+  opacity: 0.4;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .x-exporter-menu__cancel {
-  text-align: right;
-  color: rgba(245, 248, 250, 0.65);
+  text-align: center;
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: 4px;
+  background: rgba(0, 0, 0, 0.15);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.x-exporter-menu__cancel:hover {
+  background: rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
 }
 
 .x-exporter-toast {
@@ -323,6 +360,7 @@ article[data-testid="tweet"] {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  text-align: left;
 }
 
 .x-exporter-poster__author {
@@ -359,6 +397,7 @@ article[data-testid="tweet"] {
   word-wrap: break-word;
   overflow-wrap: break-word;
   white-space: normal;
+  text-align: left;
 }
 
 .x-exporter-poster__text p {
@@ -439,18 +478,22 @@ article[data-testid="tweet"] {
   font-size: 13px;
   line-height: 1.5;
   color: rgba(15, 20, 25, 0.85);
+  text-align: left;
 }
 
 .x-exporter-poster__footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 16px;
+  row-gap: 6px;
   padding-top: 12px;
   border-top: 1px solid rgba(15, 20, 25, 0.18);
 }
 
 .x-exporter-poster__qr {
+  grid-column: 1;
+  grid-row: 1 / 3;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -465,25 +508,50 @@ article[data-testid="tweet"] {
 .x-exporter-poster__qr-caption {
   font-size: 11px;
   color: rgba(15, 20, 25, 0.55);
+  white-space: nowrap;
 }
 
 .x-exporter-poster__brand {
+  grid-column: 2;
+  grid-row: 1;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 4px;
+  gap: 2px;
+  text-align: right;
+  align-self: start;
+}
+
+.x-exporter-poster__brand-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.x-exporter-poster__brand-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
 }
 
 .x-exporter-poster__brand-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: rgba(15, 20, 25, 0.75);
-  letter-spacing: 0.02em;
+  font-size: 16px;
+  font-weight: 700;
+  color: rgba(15, 20, 25, 0.9);
+  letter-spacing: 0.01em;
 }
 
-.x-exporter-poster__brand-meta {
+.x-exporter-poster__brand-author {
+  font-size: 12px;
+  color: rgba(15, 20, 25, 0.55);
+}
+
+.x-exporter-poster__stats {
+  grid-column: 2;
+  grid-row: 2;
   font-size: 11px;
   color: rgba(15, 20, 25, 0.55);
   white-space: nowrap;
   text-align: right;
+  align-self: end;
 }

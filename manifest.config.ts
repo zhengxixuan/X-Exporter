@@ -38,7 +38,8 @@ export default defineManifest(() => ({
         'src/assets/fonts/Inter-Bold.woff2',
         'src/assets/fonts/NotoSansSC-Regular.woff2',
         'src/assets/fonts/NotoSansSC-Bold.woff2',
-        'src/content/style.css'
+        'src/content/style.css',
+        'src/icons/icon-48.png'
       ],
       matches: ['<all_urls>']
     }

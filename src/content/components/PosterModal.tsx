@@ -137,7 +137,7 @@ export function PosterModal({ tweet, onClose }: PosterModalProps) {
     }
 
     if (!posterRef.current) {
-      setFeedback('海报元素未找到');
+      setFeedback('Poster element not found');
       return;
     }
 
@@ -154,10 +154,10 @@ export function PosterModal({ tweet, onClose }: PosterModalProps) {
       // Wait a bit for any pending renders
       await new Promise(resolve => setTimeout(resolve, 200));
 
-      console.log('🖼️ 开始使用 html-to-image 生成海报...');
+      console.log('🖼️ Starting poster generation with html-to-image...');
 
-      // 🔑 关键修复：预先将所有外部图片转换为 data URL
-      // 避免 html-to-image 在处理跨域图片时失败
+      // 🔑 Fix: Convert all external images to data URLs first
+      // This prevents html-to-image from failing on CORS images
       const allImages = posterRef.current.querySelectorAll('img');
       const imagePromises: Promise<void>[] = [];
 
@@ -167,10 +167,10 @@ export function PosterModal({ tweet, onClose }: PosterModalProps) {
             try {
               const dataUrl = await requestImageDataUrl(img.src);
               img.src = dataUrl;
-              console.log('✅ 图片已转换为 data URL');
+              console.log('✅ Image converted to data URL');
             } catch (err) {
-              console.warn('⚠️ 图片转换失败，将跳过:', img.src, err);
-              // 失败时使用占位符或移除
+              console.warn('⚠️ Image conversion failed, skipping:', img.src, err);
+              // Hide failed images
               img.style.display = 'none';
             }
           })();
@@ -178,45 +178,45 @@ export function PosterModal({ tweet, onClose }: PosterModalProps) {
         }
       });
 
-      // 等待所有图片转换完成
+      // Wait for all images to be converted
       await Promise.all(imagePromises);
-      console.log(`✅ 已处理 ${imagePromises.length} 个图片`);
+      console.log(`✅ Processed ${imagePromises.length} images`);
 
       try {
-        // 🔑 新方案：直接导出已经有背景样式的父元素（来自 CSS）
+        // 🔑 Export parent element with CSS background
         const parent = posterRef.current.parentElement;
         if (!parent) {
-          throw new Error('无法找到父元素');
+          throw new Error('Parent element not found');
         }
 
-        console.log('🎨 准备导出，父元素实际宽度:', parent.offsetWidth, 'px');
+        console.log('🎨 Preparing export, parent width:', parent.offsetWidth, 'px');
 
-        // 使用 html-to-image 的 toPng 方法，直接导出父元素
+        // Use html-to-image toPng method
         const dataUrl = await htmlToImage.toPng(parent, {
           quality: 1,
           pixelRatio: 3,
           cacheBust: true,
         });
 
-        console.log('✅ 图片生成成功，data URL 长度:', dataUrl.length);
+        console.log('✅ Image generated, data URL length:', dataUrl.length);
 
-        // 将 data URL 转换为 Blob
+        // Convert data URL to Blob
         const response = await fetch(dataUrl);
         const blob = await response.blob();
 
-        console.log('✅ Blob 创建成功，大小:', blob.size);
+        console.log('✅ Blob created, size:', blob.size);
 
         const filename = `${normalizedTimestamp}-${tweet.authorHandle || 'unknown'}-poster.png`;
         saveAs(blob, filename);
-        setFeedback('已开始下载海报');
-        console.log('✅ 海报下载完成');
+        setFeedback('Poster download started');
+        console.log('✅ Poster download complete');
       } catch (innerError) {
-        console.error('❌ html-to-image 生成失败:', innerError);
+        console.error('❌ html-to-image generation failed:', innerError);
         throw innerError;
       }
     } catch (error) {
-      logger.error('海报导出失败', error);
-      setFeedback('导出失败,请重试');
+      logger.error('Poster export failed', error);
+      setFeedback('Export failed, please try again');
     } finally {
       setDownloading(false);
     }
@@ -228,7 +228,7 @@ export function PosterModal({ tweet, onClose }: PosterModalProps) {
     <div className="x-exporter-modal-backdrop" role="dialog" aria-modal="true">
       <div className="x-exporter-modal x-exporter-modal--wide">
         <header className="x-exporter-modal__header">
-          <h2>海报预览</h2>
+          <h2>Poster Preview</h2>
           <button type="button" onClick={onClose} className="x-exporter-modal__close">
             ✕
           </button>
@@ -240,7 +240,7 @@ export function PosterModal({ tweet, onClose }: PosterModalProps) {
                 {tweet.avatarUrl ? (
                   <img
                     src={tweet.avatarUrl}
-                    alt={tweet.authorName || '作者头像'}
+                    alt={tweet.authorName || 'Author avatar'}
                     className="x-exporter-poster__avatar"
                   />
                 ) : (
@@ -249,7 +249,7 @@ export function PosterModal({ tweet, onClose }: PosterModalProps) {
                   </div>
                 )}
                 <div className="x-exporter-poster__header-text">
-                  <p className="x-exporter-poster__author">{tweet.authorName || '未知作者'}</p>
+                  <p className="x-exporter-poster__author">{tweet.authorName || 'Unknown'}</p>
                   <p className="x-exporter-poster__handle">@{tweet.authorHandle || 'unknown'}</p>
                   <p className="x-exporter-poster__time">
                     {(() => {
@@ -281,7 +281,7 @@ export function PosterModal({ tweet, onClose }: PosterModalProps) {
                 {resolvedImages.length ? (
                   <div className={`x-exporter-poster__images count-${Math.min(resolvedImages.length, 4)}`}>
                     {imagesLoading ? (
-                      <span className="x-exporter-poster__images-loading">图片加载中...</span>
+                      <span className="x-exporter-poster__images-loading">Loading images...</span>
                     ) : (
                       resolvedImages.slice(0, 4).map((url, index) => <img key={`${url}-${index}`} src={url} alt="tweet attachment" />)
                     )}
@@ -301,16 +301,26 @@ export function PosterModal({ tweet, onClose }: PosterModalProps) {
               </section>
               <footer className="x-exporter-poster__footer" translate="no">
                 <div className="x-exporter-poster__qr">
-                  {qrDataUrl ? <img src={qrDataUrl} alt="原文二维码" /> : <span>二维码生成中...</span>}
-                  <span className="x-exporter-poster__qr-caption">扫码查看原文</span>
+                  {qrDataUrl ? <img src={qrDataUrl} alt="QR Code" /> : <span>Generating QR...</span>}
+                  <span className="x-exporter-poster__qr-caption" lang="en">Scan for original</span>
                 </div>
                 <div className="x-exporter-poster__brand" translate="no">
-                  <span className="x-exporter-poster__brand-name" lang="en">
-                    X-Exporter
+                  <div className="x-exporter-poster__brand-header">
+                    <img
+                      src={`chrome-extension://${chrome.runtime.id}/src/icons/icon-48.png`}
+                      alt="X-Exporter"
+                      className="x-exporter-poster__brand-icon"
+                    />
+                    <span className="x-exporter-poster__brand-name" lang="en">
+                      X-Exporter
+                    </span>
+                  </div>
+                  <span className="x-exporter-poster__brand-author" lang="en">
+                    @NicoAIstudio
                   </span>
-                  <span className="x-exporter-poster__brand-meta" lang="en">
-                    {statsLine}
-                  </span>
+                </div>
+                <div className="x-exporter-poster__stats" translate="no" lang="en">
+                  {statsLine}
                 </div>
               </footer>
             </article>
@@ -318,7 +328,7 @@ export function PosterModal({ tweet, onClose }: PosterModalProps) {
         </section>
         <footer className="x-exporter-modal__footer">
           <button type="button" className="x-exporter-secondary" onClick={onClose} disabled={downloading}>
-            取消
+            Cancel
           </button>
           <button
             type="button"
@@ -326,7 +336,7 @@ export function PosterModal({ tweet, onClose }: PosterModalProps) {
             onClick={handleDownload}
             disabled={downloading || imagesLoading}
           >
-            {downloading ? '导出中...' : '下载海报'}
+            {downloading ? 'Exporting...' : 'Download Poster'}
           </button>
         </footer>
         {feedback ? <p className="x-exporter-feedback">{feedback}</p> : null}

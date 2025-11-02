@@ -98,7 +98,7 @@ export const generateMarkdown = (input: TweetData | TweetData[]): string => {
     const frontmatter = buildYamlFrontmatter(tweets[0]);
     const body = renderTweetMarkdown(tweets[0]);
 
-    return `${frontmatter}\n\n${body}\n\n---\n\n*Exported with [X-Exporter](https://github.com/your-repo/x-exporter)*\n`;
+    return `${frontmatter}\n\n${body}\n\n---\n\n*Exported with [X-Exporter](https://github.com/zhengxixuan/X-Exporter)*\n`;
   }
 
   // Thread: use YAML frontmatter for first tweet, then headers for subsequent tweets
@@ -116,7 +116,7 @@ export const generateMarkdown = (input: TweetData | TweetData[]): string => {
     sections.push(`${header}${body}`);
   }
 
-  sections.push('\n---\n\n*Exported with [X-Exporter](https://github.com/your-repo/x-exporter)*');
+  sections.push('\n---\n\n*Exported with [X-Exporter](https://github.com/zhengxixuan/X-Exporter*');
 
   return sections.join('\n\n---\n\n');
 };
